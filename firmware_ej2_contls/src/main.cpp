@@ -6,21 +6,48 @@
 #include <WiFiClientSecure.h>
 #include <time.h>
 
-WiFiClientSecure espClientSecure; // Cliente para conexiones seguras con TLS (Ejercicio 2)
+// Envoltorio profesional para interceptar y forzar la validación de TLS por nombre de dominio (FQDN)
+// sobre una dirección IP directa en una red local.
+class IPBasedWiFiClientSecure : public WiFiClientSecure {
+public:
+  int connect(const char *host, uint16_t port) override {
+    if (strcmp(host, MQTT_BROKER) == 0 || strcmp(host, "mqtt.local") == 0) {
+      IPAddress ip;
+      ip.fromString(MQTT_BROKER);
+      // Conecta al socket de la IP, pero valida el certificado de forma estricta contra "mqtt.local"
+      return WiFiClientSecure::connect(ip, port, "mqtt.local", _CA_cert, _cert, _private_key);
+    }
+    return WiFiClientSecure::connect(host, port);
+  }
+
+  int connect(const char *host, uint16_t port, int32_t timeout) {
+    if (strcmp(host, MQTT_BROKER) == 0 || strcmp(host, "mqtt.local") == 0) {
+      IPAddress ip;
+      ip.fromString(MQTT_BROKER);
+      return WiFiClientSecure::connect(ip, port, "mqtt.local", _CA_cert, _cert, _private_key);
+    }
+    return WiFiClientSecure::connect(host, port, timeout);
+  }
+};
+
+IPBasedWiFiClientSecure espClientSecure; // Cliente seguro personalizado profesional
 PubSubClient client(espClientSecure);
 
 unsigned long lastMsgTime = 0;
 unsigned long delayTime = 0;
-unsigned long ultimoIntentoReconexion = 0; // Control de tiempo para reconexiones no bloqueantes
+unsigned long ultimoIntentoReconexion =
+    0; // Control de tiempo para reconexiones no bloqueantes
 
 // Configuración de NTP para obtener el timestamp
 const char *ntpServer = "pool.ntp.org";
 const long gmtOffset_sec = -10800; // GMT-3 (Argentina)
 const int daylightOffset_sec = 0;
 
-void mostrarMetricasRAM(const char* fase) {
-  Serial.printf("\n[MÉTRICA-RAM] %s -> Libre actual: %u bytes | Mínima libre registrada: %u bytes | Usada: %u bytes\n", 
-                fase, ESP.getFreeHeap(), ESP.getMinFreeHeap(), ESP.getHeapSize() - ESP.getFreeHeap());
+void mostrarMetricasRAM(const char *fase) {
+  Serial.printf("\n[MÉTRICA-RAM] %s -> Libre actual: %u bytes | Mínima libre "
+                "registrada: %u bytes | Usada: %u bytes\n",
+                fase, ESP.getFreeHeap(), ESP.getMinFreeHeap(),
+                ESP.getHeapSize() - ESP.getFreeHeap());
 }
 
 void setup_wifi() {
@@ -48,7 +75,9 @@ bool reconnect() {
   unsigned long inicioConexion = micros();
   if (client.connect(clientId.c_str(), MQTT_USER, MQTT_PASSWORD)) {
     unsigned long latenciaConexion = micros() - inicioConexion;
-    Serial.printf("\n[MÉTRICA-LATENCIA] Conexión establecida en: %lu µs (%lu ms)\n", latenciaConexion, latenciaConexion / 1000);
+    Serial.printf(
+        "\n[MÉTRICA-LATENCIA] Conexión establecida en: %lu µs (%lu ms)\n",
+        latenciaConexion, latenciaConexion / 1000);
     mostrarMetricasRAM("MQTT Conectado");
     return true;
   } else {
@@ -135,14 +164,17 @@ void loop() {
     // Publicar
     Serial.print("Publicando mensaje: ");
     Serial.println(jsonBuffer);
-    
+
     // Publicar y medir latencia
     unsigned long inicioPub = micros();
-    bool pubResult = client.publish("sensores/temperatura", jsonBuffer, 0); // QoS 0
+    bool pubResult =
+        client.publish("sensores/temperatura", jsonBuffer, 0); // QoS 0
     unsigned long latenciaPub = micros() - inicioPub;
 
     if (pubResult) {
-      Serial.printf("[MÉTRICA-LATENCIA] Publicación exitosa completada en: %lu µs\n", latenciaPub);
+      Serial.printf(
+          "[MÉTRICA-LATENCIA] Publicación exitosa completada en: %lu µs\n",
+          latenciaPub);
     } else {
       Serial.println("[ERROR] Falló la publicación MQTT");
     }
