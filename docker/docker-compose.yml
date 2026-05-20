@@ -6,15 +6,15 @@ services:
     container_name: emqx_broker
     ports:
       - "1883:1883" # Puerto MQTT estándar (sin cifrar) - Ejercicio 1
-      #      - "8883:8883" # Puerto MQTT seguro (con TLS) - Ejercicio 2
-      #      - "8083:8083" # Puerto MQTT sobre WebSockets (ws)
-      #      - "8084:8084" # Puerto MQTT sobre WebSockets seguro (wss)
+      - "8883:8883" # Puerto MQTT seguro (con TLS) - Ejercicio 2
+      - "8083:8083" # Puerto MQTT sobre WebSockets (ws)
+      - "8084:8084" # Puerto MQTT sobre WebSockets seguro (wss)
       - "18083:18083" # Dashboard Web de EMQX (Administración)
     volumes:
       - ./emqx/data:/opt/emqx/data
       - ./emqx/certs:/opt/emqx/etc/certs
-    environment: #      - EMQX_LISTENERS__SSL__DEFAULT__KEYFILE=/opt/emqx/etc/certs/server.key
-
-    #      - EMQX_LISTENERS__SSL__DEFAULT__CERTFILE=/opt/emqx/etc/certs/server.crt
-    #      - EMQX_LISTENERS__SSL__DEFAULT__CACERTFILE=/opt/emqx/etc/certs/ca.crt
+    environment:
+      - EMQX_LISTENERS__SSL__DEFAULT__KEYFILE=/opt/emqx/etc/certs/server.key
+      - EMQX_LISTENERS__SSL__DEFAULT__CERTFILE=/opt/emqx/etc/certs/server.crt
+      - EMQX_LISTENERS__SSL__DEFAULT__CACERTFILE=/opt/emqx/etc/certs/ca.crt
     restart: unless-stopped
