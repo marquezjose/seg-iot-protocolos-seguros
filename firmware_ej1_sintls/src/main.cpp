@@ -6,7 +6,6 @@
 #include <time.h>
 
 WiFiClient espClient; // Cliente para conexiones sin TLS (Ejercicio 1)
-// WiFiClientSecure espClientSecure; // Lo usaremos después en el Ejercicio 2
 PubSubClient client(espClient);
 
 unsigned long lastMsgTime = 0;
