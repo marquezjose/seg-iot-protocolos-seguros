@@ -14,7 +14,8 @@ services:
       - ./emqx/data:/opt/emqx/data
       - ./emqx/certs:/opt/emqx/etc/certs
     environment:
-      - EMQX_LISTENERS__SSL__DEFAULT__KEYFILE=/opt/emqx/etc/certs/server.key
-      - EMQX_LISTENERS__SSL__DEFAULT__CERTFILE=/opt/emqx/etc/certs/server.crt
-      - EMQX_LISTENERS__SSL__DEFAULT__CACERTFILE=/opt/emqx/etc/certs/ca.crt
+      - EMQX_LISTENERS__SSL__DEFAULT__SSL_OPTIONS__KEYFILE=/opt/emqx/etc/certs/server.key
+      - EMQX_LISTENERS__SSL__DEFAULT__SSL_OPTIONS__CERTFILE=/opt/emqx/etc/certs/server.crt
+      - EMQX_LISTENERS__SSL__DEFAULT__SSL_OPTIONS__CACERTFILE=/opt/emqx/etc/certs/ca.crt
+      - EMQX_LISTENERS__WSS__DEFAULT__ENABLE=false
     restart: unless-stopped
