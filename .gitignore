@@ -21,3 +21,7 @@ docker/emqx/log/
 # Archivos del Sistema Operativo
 .DS_Store
 Thumbs.db
+
+# Archivos sin necesidad que se comparta.
+
+Informe_Practico5.*
